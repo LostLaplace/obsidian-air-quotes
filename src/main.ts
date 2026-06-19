@@ -8,6 +8,7 @@ export default class AirQuotes extends Plugin {
   sourceFile: TFile
   editor: Editor
   cursorPosition: EditorPosition
+  targetSection: string
 
   async onload () {
     await this.loadSettings()
@@ -25,6 +26,7 @@ export default class AirQuotes extends Plugin {
 
           // Get the location for the note containing the source text
           const metadata = app.metadataCache.getFileCache(view.file)
+          this.targetSection = metadata?.frontmatter?.[this.settings.targetSectionVariable] ?? ''
           // @ts-ignore
           let bookPath = metadata?.frontmatterLinks?.find(x => x.key === this.settings.bookSourceVariable)?.link
 

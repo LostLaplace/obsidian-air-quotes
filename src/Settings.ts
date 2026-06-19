@@ -5,6 +5,7 @@ export interface AirQuotesSettings {
   bookSourceVariable: string;
   outputStyle: string;
   calloutHeader: string;
+  targetSectionVariable: string;
   importLocation: string;
   addLinkToCurrentNote: boolean;
 }
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: AirQuotesSettings = {
   bookSourceVariable: 'source_text',
   outputStyle: 'callout',
   calloutHeader: '> [!quote]',
+  targetSectionVariable: 'quotes_section',
   importLocation: '',
   addLinkToCurrentNote: true
 }
@@ -67,6 +69,17 @@ export class AirQuotesSettingTab extends PluginSettingTab {
         .setValue(this.plugin.settings.calloutHeader)
         .onChange(async value => {
           this.plugin.settings.calloutHeader = value
+          await this.plugin.saveSettings()
+        }))
+
+    new Setting(containerEl)
+      .setName('Target section property')
+      .setDesc('Frontmatter property whose value is the heading name to append quotes under. Notes without this property fall back to inserting at the cursor.')
+      .addText(text => text
+        .setPlaceholder('quotes_section')
+        .setValue(this.plugin.settings.targetSectionVariable)
+        .onChange(async value => {
+          this.plugin.settings.targetSectionVariable = value
           await this.plugin.saveSettings()
         }))
 

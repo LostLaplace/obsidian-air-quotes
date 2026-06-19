@@ -57,3 +57,17 @@ EPub import is considered feature-complete for the purpose of importing an ePub 
 If you require additional features for your ePub import, you can use one of the many existing fully-featured ePub to Markdown tools such as [Pandoc](https://pandoc.org/) or [Calibre](https://calibre-ebook.com/).
 
 If someone wants to code a feature up and submit a Pull Request I'll have a look at it, but I have no current plans to add anything additional myself to the ePub import.
+
+## Fork changes
+
+This fork adds one additional setting: **Target section property**.
+
+When set (default: `quotes_section`), the plugin reads that frontmatter property from the active note to determine where to insert quotes. For example, adding:
+
+```
+quotes_section: Quotes
+```
+
+to a note's frontmatter will append every inserted quote to the `## Quotes` section of that note, regardless of cursor position. This makes it practical to bind "Insert quote" to a hotkey without thinking about where your cursor is.
+
+Notes without the property behave exactly as upstream — quotes are inserted at the cursor.

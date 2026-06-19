@@ -1,4 +1,4 @@
-import { Modal, SuggestModal, MarkdownRenderer, Component, Platform } from 'obsidian'
+import { Modal, Notice, SuggestModal, MarkdownRenderer, Component, Platform } from 'obsidian'
 import AirQuotes from './main'
 
 export class SearchModal extends SuggestModal<any> {
@@ -164,11 +164,59 @@ export class QuoteModal extends Modal {
   }
 
   /**
+   * Find the position to insert at the end of a named section.
+   * Returns null if the heading is not found in the current note.
+   */
+  findSectionInsertPosition (targetSection: string): { line: number, ch: number, isHeadingLine: boolean } | null {
+    const file = this.plugin.app.workspace.getActiveFile()
+    if (!file) return null
+
+    const headings = this.plugin.app.metadataCache.getFileCache(file)?.headings
+    if (!headings) return null
+
+    const targetIndex = headings.findIndex(h => h.heading === targetSection)
+    if (targetIndex === -1) return null
+
+    const targetHeading = headings[targetIndex]
+    const headingLine = targetHeading.position.start.line
+    const targetLevel = targetHeading.level
+
+    const nextHeading = headings.slice(targetIndex + 1).find(h => h.level <= targetLevel)
+    const sectionEndLine = nextHeading
+      ? nextHeading.position.start.line - 1
+      : this.plugin.editor.lineCount() - 1
+
+    // Walk back from end of section to find last non-empty line
+    let insertLine = sectionEndLine
+    while (insertLine > headingLine && this.plugin.editor.getLine(insertLine).trim() === '') {
+      insertLine--
+    }
+
+    return {
+      line: insertLine,
+      ch: this.plugin.editor.getLine(insertLine).length,
+      isHeadingLine: insertLine === headingLine
+    }
+  }
+
+  /**
    * Insert the final chosen quote into the editor
    */
   async insertTextIntoEditor () {
     const text = this.formatAsFinalMarkdownOutput()
     this.close()
+
+    const targetSection = this.plugin.targetSection?.trim()
+    if (targetSection) {
+      const pos = this.findSectionInsertPosition(targetSection)
+      if (pos) {
+        const prefix = pos.isHeadingLine ? '\n' : '\n\n'
+        this.plugin.editor.replaceRange(prefix + text, { line: pos.line, ch: pos.ch })
+        return
+      }
+      new Notice(`Air Quotes: section "${targetSection}" not found, inserting at cursor`)
+    }
+
     this.plugin.editor.replaceRange(text, this.plugin.cursorPosition)
     this.plugin.editor.setCursor({ line: this.plugin.cursorPosition.line + text.split('\n').length, ch: 0 })
   }
