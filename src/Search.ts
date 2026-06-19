@@ -186,9 +186,11 @@ export class QuoteModal extends Modal {
       ? nextHeading.position.start.line - 1
       : this.plugin.editor.lineCount() - 1
 
-    // Walk back from end of section to find last non-empty line
+    // Walk back from end of section to find last non-empty, non-hrule line
     let insertLine = sectionEndLine
-    while (insertLine > headingLine && this.plugin.editor.getLine(insertLine).trim() === '') {
+    while (insertLine > headingLine) {
+      const line = this.plugin.editor.getLine(insertLine).trim()
+      if (line !== '' && !/^[-*_]{3,}$/.test(line)) break
       insertLine--
     }
 
